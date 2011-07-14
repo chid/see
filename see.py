@@ -38,6 +38,7 @@ OF SUCH DAMAGE.
 
 import fnmatch
 import inspect
+import os
 import re
 import sys
 import textwrap
@@ -59,6 +60,33 @@ __contributors__ = [
 __version__ = '1.0.1'
 __copyright__ = 'Copyright (c) 2009-2010 Liam Cooke'
 __license__ = 'BSD License'
+
+
+def term_width():
+    """
+    Return the column width of the terminal, or 0 if it can't be determined.
+
+    """
+    # Get the size of the terminal as [lines, columns].
+    # If stty is not found, this should be an empty list.
+    size = os.popen('stty size', 'r').read().split()
+
+    if size:
+        return int(size[1])
+    else:
+        return 0
+
+def line_width():
+    """
+    Return the ideal column width for see() output, avoiding wrapping
+    if possible.
+
+    """
+    width = term_width()
+    if width:
+        return min(width, 100)
+    else:
+        return 78
 
 
 def regex_filter(names, pat):
@@ -101,7 +129,7 @@ class _SeeOutput(tuple):
             indent = ' ' * len(sys.ps1)
         else:
             indent = '    '
-        return textwrap.fill(''.join(padded), 78,
+        return textwrap.fill(''.join(padded), line_width(),
                              initial_indent=indent,
                              subsequent_indent=indent)
 
